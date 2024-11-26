@@ -66,14 +66,29 @@ Bucket names in Google Cloud Storage must be unique across all users globally.
 Append a unique identifier to your bucket names. For example:
 
 image-upload-bucket-your-unique-id
+
 thumbnail-bucket-your-unique-id
+
 processed-images-bucket-your-unique-id
+
+
 
 ```bash
 gsutil mb -l europe-west2 gs://image-upload-bucket-dm01
 gsutil mb -l europe-west2 gs://thumbnail-bucket-dm01
 gsutil mb -l europe-west2 gs://processed-images-bucket-dm01
 ```
+***NOTE***:
+Make sure bucket names are uniqe and take note of them for later use.
+IN index.js file the following fragment of code need to be updated with your bucket names:
+
+```javascript
+// Bucket Names
+const SOURCE_BUCKET = 'image-upload-bucket-dm01';
+const THUMBNAIL_BUCKET = 'thumbnail-bucket-dm01';
+const PROCESSED_BUCKET = 'processed-images-bucket-dm01';
+```
+
 
 Grant Permissions (if you have admin access):
 
@@ -241,6 +256,7 @@ Replace BILLING_ACCOUNT_ID with your billing account ID. You can retrieve it usi
 
 Deploy the Cloud Function using the following command:
 
+***NOTE***: Update the bucket names in the command below with your unique bucket names.
 
 ```bash
 gcloud functions deploy processImage \
