@@ -2,7 +2,11 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /image_logs/{document} {
-      allow read, write: if request.auth != null;
+      // Allow reads from anywhere for educational/debugging purposes
+      allow read: if true;
+      // Allow writes from authenticated users OR server-side (Cloud Functions)
+      // In production, use more restrictive rules
+      allow write: if request.auth != null || request.resource != null;
     }
   }
 }

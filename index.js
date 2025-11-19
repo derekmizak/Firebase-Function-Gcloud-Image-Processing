@@ -50,6 +50,17 @@ exports.processImage = async (event, context) => {
         throw new Error('File name is missing from the event payload');
     }
 
+    // Check if file has already been processed (idempotency)
+    const existingLog = await db.collection('image_logs')
+        .where('fileName', '==', fileName)
+        .limit(1)
+        .get();
+
+    if (!existingLog.empty) {
+        console.log(`File ${fileName} already processed, skipping to prevent duplicate processing`);
+        return;
+    }
+
     const sourceBucket = storage.bucket(SOURCE_BUCKET);
     const thumbnailBucket = storage.bucket(THUMBNAIL_BUCKET);
     const processedBucket = storage.bucket(PROCESSED_BUCKET);
@@ -105,12 +116,22 @@ exports.processImage = async (event, context) => {
 
         console.log('Processing completed successfully:', logEntry);
     } catch (error) {
-        console.error('Error processing file:', error);
+        // Structured error logging for Cloud Error Reporting
+        console.error(JSON.stringify({
+            severity: 'ERROR',
+            message: 'Error processing file',
+            fileName: fileName,
+            error: error.message,
+            stack: error.stack
+        }));
         throw error;
     } finally {
         // Cleanup temporary files
         if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
         if (fs.existsSync(thumbnailPath)) fs.unlinkSync(thumbnailPath);
         if (fs.existsSync(processedImagePath)) fs.unlinkSync(processedImagePath);
+
+        // Cleanup ExifTool process to prevent memory leaks
+        await exiftool.end();
     }
 };

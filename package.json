@@ -1,9 +1,18 @@
 {
+  "name": "image-processing-function",
+  "version": "1.0.0",
+  "description": "Educational Cloud Function for image processing with metadata extraction",
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
   "dependencies": {
     "@google-cloud/storage": "^7.14.0",
     "exiftool-vendored": "^29.0.0",
     "firebase-admin": "^13.0.1",
-    "firebase-tools": "^13.27.0",
     "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "firebase-tools": "^13.27.0"
   }
 }
