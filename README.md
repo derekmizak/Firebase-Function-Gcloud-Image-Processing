@@ -81,7 +81,7 @@ Before starting, familiarize yourself with these core concepts:
 2. Note your **Project ID** (e.g., `your-project-id`).
 3. Set the project ID as the default for the `gcloud` CLI:
    ```bash
-   gcloud config set project your-project-id
+   gcloud config set project firebase-nosql
    ```
 4. Enable billing for the project:
    - Navigate to the **Billing** section of your project.
@@ -126,18 +126,18 @@ Bucket names in Google Cloud Storage must be **globally unique** across all Goog
 **📖 Reference**: [Bucket Naming Guidelines](https://cloud.google.com/storage/docs/naming-buckets)
 
 Append a unique identifier to your bucket names. For example:
-- `image-upload-bucket-your-unique-id`
-- `thumbnail-bucket-your-unique-id`
-- `processed-images-bucket-your-unique-id`
+- `image-upload-bucket-your-unique-dm03`
+- `thumbnail-bucket-your-unique-dm03`
+- `processed-images-bucket-your-unique-dm03`
 
 Create the three buckets (replace `dm01` with your unique identifier):
 
 ```bash
 # The -l flag specifies the location (europe-west2 = London)
 # Choose a region close to your users for better performance
-gsutil mb -l europe-west2 gs://image-upload-bucket-dm01
-gsutil mb -l europe-west2 gs://thumbnail-bucket-dm01
-gsutil mb -l europe-west2 gs://processed-images-bucket-dm01
+gsutil mb -l europe-west2 gs://image-upload-bucket-dm06
+gsutil mb -l europe-west2 gs://thumbnail-bucket-dm06
+gsutil mb -l europe-west2 gs://processed-images-bucket-dm06
 ```
 
 **Why three separate buckets?**
@@ -152,9 +152,9 @@ In the `index.js` file, update the following code with your bucket names:
 
 ```javascript
 // Bucket Names
-const SOURCE_BUCKET = 'image-upload-bucket-dm01';
-const THUMBNAIL_BUCKET = 'thumbnail-bucket-dm01';
-const PROCESSED_BUCKET = 'processed-images-bucket-dm01';
+const SOURCE_BUCKET = 'image-upload-bucket-dm06';
+const THUMBNAIL_BUCKET = 'thumbnail-bucket-dm06';
+const PROCESSED_BUCKET = 'processed-images-bucket-dm06';
 ```
 
 
@@ -163,8 +163,8 @@ Grant Permissions (if you have admin access):
 Use the following command to grant yourself the necessary permissions:
 
 ```bash
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-    --member="user:YourEmailAddress@some-email.com" \
+gcloud projects add-iam-policy-binding firebase-nosql \
+    --member="user:dbs.cd2025@gmail.com" \
     --role="roles/storage.admin"
 ```
 
@@ -183,9 +183,9 @@ gcloud storage buckets list
 
 Disable public access for all buckets:
 ```bash
-gsutil iam ch -d allUsers gs://image-upload-bucket-dm01
-gsutil iam ch -d allUsers gs://thumbnail-bucket-dm01
-gsutil iam ch -d allUsers gs://processed-images-bucket-dm01
+gsutil iam ch -d allUsers gs://image-upload-bucket-dm06
+gsutil iam ch -d allUsers gs://thumbnail-bucket-dm06
+gsutil iam ch -d allUsers gs://processed-images-bucket-dm06
 ```
 
 **What this command does:** The `-d` flag removes (`deletes`) the IAM binding for `allUsers`, ensuring only authenticated users with proper permissions can access these buckets.
@@ -527,7 +527,52 @@ First, list service accounts to find the default App Engine service account:
 gcloud iam service-accounts list
 ```
 
-Look for an account like `YOUR-PROJECT-ID@appspot.gserviceaccount.com`
+Look for an account like `firebase-nosql@appspot.gserviceaccount.com`
+
+#### Identify the Cloud Storage Service Agent (needed for Eventarc triggers)
+
+When Cloud Storage emits Object Finalize events to Eventarc (which then invokes your Cloud Function), Google uses a **Cloud Storage service agent** inside your project. This agent must be able to publish to Pub/Sub; otherwise the trigger creation fails during deployment.
+
+- **Service agent format**: `service-<PROJECT_NUMBER>@gs-project-accounts.iam.gserviceaccount.com`
+
+Steps to locate the correct email:
+1. Retrieve the project number:
+   ```bash
+   gcloud projects describe firebase-nosql --format="value(projectNumber)"
+   ```
+2. Substitute the number you get (e.g., `427242312382`) into the service agent email:
+   ```
+   service-427242312382@gs-project-accounts.iam.gserviceaccount.com
+   ```
+
+**Console alternative**:
+1. Open **IAM & Admin → IAM** in the Cloud Console.
+2. Use the filter chip **"Role: Storage Service Agent"** or search for `gs-project-accounts`.
+3. Copy the email address shown—it should match the pattern above.
+
+📖 **Reference**: [Eventarc Cloud Storage trigger prerequisites](https://cloud.google.com/eventarc/docs/run/storage#before-you-begin)
+
+#### Grant Pub/Sub Publisher role to the service agent
+
+Assign the Pub/Sub Publisher role so the service agent can deliver events to Eventarc. Replace the project number with yours.
+
+```bash
+gcloud projects add-iam-policy-binding firebase-nosql \
+    --member="serviceAccount:service-427242312382@gs-project-accounts.iam.gserviceaccount.com" \
+    --role="roles/pubsub.publisher"
+```
+
+If you skip this step, deployments fail with errors similar to: `The Cloud Storage service account for your bucket is unable to publish to Cloud Pub/Sub topics... permission denied`.
+
+*Optional verification*:
+```bash
+gcloud projects get-iam-policy firebase-nosql \
+    --flatten="bindings[].members" \
+    --filter="bindings.role:roles/pubsub.publisher AND bindings.members:service-427242312382@gs-project-accounts.iam.gserviceaccount.com" \
+    --format="table(bindings.role, bindings.members)"
+```
+
+IAM propagation can take ~60 seconds—wait briefly before redeploying the function.
 
 #### Grant Storage Permissions
 
@@ -536,16 +581,16 @@ Grant permissions to the service account using the **Principle of Least Privileg
 # Replace YOUR-PROJECT-ID with your actual GCP project ID from Part 1
 # Replace the bucket names with your unique bucket names
 gsutil iam ch \
-    serviceAccount:YOUR-PROJECT-ID@appspot.gserviceaccount.com:roles/storage.objectViewer \
-    gs://image-upload-bucket-dm01
+    serviceAccount:firebase-nosql@appspot.gserviceaccount.com:roles/storage.objectViewer \
+    gs://image-upload-bucket-dm06
 
 gsutil iam ch \
-    serviceAccount:YOUR-PROJECT-ID@appspot.gserviceaccount.com:roles/storage.objectCreator \
-    gs://thumbnail-bucket-dm01
+    serviceAccount:firebase-nosql@appspot.gserviceaccount.com:roles/storage.objectCreator \
+    gs://thumbnail-bucket-dm06
 
 gsutil iam ch \
-    serviceAccount:YOUR-PROJECT-ID@appspot.gserviceaccount.com:roles/storage.objectCreator \
-    gs://processed-images-bucket-dm01
+    serviceAccount:firebase-nosql@appspot.gserviceaccount.com:roles/storage.objectCreator \
+    gs://processed-images-bucket-dm06
 ```
 
 **Understanding the IAM roles:**
@@ -825,8 +870,8 @@ Deploy the Cloud Function using the following command:
 gcloud functions deploy processImage \
     --gen2 \
     --region europe-west2 \
-    --runtime nodejs20 \
-    --trigger-bucket image-upload-bucket-dm01 \
+    --runtime nodejs22 \
+    --trigger-bucket image-upload-bucket-dm06 \
     --entry-point processImage \
     --memory 512MB \
     --timeout 540s
@@ -888,7 +933,7 @@ Enable CloudbuildAPI when asked. Deployment may take a few minutes (typically 2-
 
 ```bash
 # Replace with your actual bucket name
-gsutil cp sample.jpg gs://image-upload-bucket-dm01
+gsutil cp ./image-processing/sample.jpg gs://image-upload-bucket-dm06
 ```
 
 **Don't have a test image?** Download one:
