@@ -81,7 +81,7 @@ Before starting, familiarize yourself with these core concepts:
 2. Note your **Project ID** (e.g., `your-project-id`).
 3. Set the project ID as the default for the `gcloud` CLI:
    ```bash
-   gcloud config set project firebase-images-479513
+   gcloud config set project `your-project-id`
    ```
 4. Enable billing for the project:
    - Navigate to the **Billing** section of your project.
@@ -126,18 +126,18 @@ Bucket names in Google Cloud Storage must be **globally unique** across all Goog
 **📖 Reference**: [Bucket Naming Guidelines](https://cloud.google.com/storage/docs/naming-buckets)
 
 Append a unique identifier to your bucket names. For example:
-- `image-upload-bucket-your-unique-dm07`
-- `thumbnail-bucket-your-unique-dm07`
-- `processed-images-bucket-your-unique-dm07`
+- `image-upload-bucket-your-unique-<unique-id>`
+- `thumbnail-bucket-your-unique-<unique-id>`
+- `processed-images-bucket-your-unique-<unique-id>`
 
-Create the three buckets (replace `dm07` with your unique identifier):
+Create the three buckets (replace `<unique-id>` with your unique identifier):
 
 ```bash
 # The -l flag specifies the location (europe-west2 = London)
 # Choose a region close to your users for better performance
-gsutil mb -l europe-west2 gs://image-upload-bucket-dm07
-gsutil mb -l europe-west2 gs://thumbnail-bucket-dm07
-gsutil mb -l europe-west2 gs://processed-images-bucket-dm07
+gsutil mb -l europe-west2 gs://image-upload-bucket-your-unique-<unique-id>
+gsutil mb -l europe-west2 gs://thumbnail-bucket-your-unique-<unique-id>
+gsutil mb -l europe-west2 gs://processed-images-bucket-your-unique-<unique-id>
 ```
 
 **Why three separate buckets?**
@@ -152,19 +152,19 @@ In the `index.js` file, update the following code with your bucket names:
 
 ```javascript
 // Bucket Names
-const SOURCE_BUCKET = 'image-upload-bucket-dm07';
-const THUMBNAIL_BUCKET = 'thumbnail-bucket-dm07';
-const PROCESSED_BUCKET = 'processed-images-bucket-dm07';
+const SOURCE_BUCKET = 'image-upload-bucket-your-unique-<unique-id>';
+const THUMBNAIL_BUCKET = 'thumbnail-bucket-your-unique-<unique-id>';
+const PROCESSED_BUCKET = 'processed-images-bucket-your-unique-<unique-id>';
 ```
 
 
 Grant Permissions (if you have admin access):
 
 Use the following command to grant yourself the necessary permissions:
-
+Make sure that you have used your own email address in the command below, also use own project name like 'firebase-images-479513'.
 ```bash
-gcloud projects add-iam-policy-binding firebase-images-479513 \
-    --member="user:dbs.cd2025@gmail.com" \
+gcloud projects add-iam-policy-binding `your-project-id` \
+    --member="user:<your-email-address>" \
     --role="roles/storage.admin"
 ```
 
@@ -183,9 +183,9 @@ gcloud storage buckets list
 
 Disable public access for all buckets:
 ```bash
-gsutil iam ch -d allUsers gs://image-upload-bucket-dm07
-gsutil iam ch -d allUsers gs://thumbnail-bucket-dm07
-gsutil iam ch -d allUsers gs://processed-images-bucket-dm07
+gsutil iam ch -d allUsers gs://image-upload-bucket-your-unique-<unique-id>
+gsutil iam ch -d allUsers gs://thumbnail-bucket-your-unique-<unique-id>
+gsutil iam ch -d allUsers gs://processed-images-bucket-your-unique-<unique-id>
 ```
 
 **What this command does:** The `-d` flag removes (`deletes`) the IAM binding for `allUsers`, ensuring only authenticated users with proper permissions can access these buckets.
@@ -272,7 +272,7 @@ Manually add Firebase to your Google Cloud project via the Firebase Console:
 
 1. Go to the [Firebase Console](https://console.firebase.google.com/u/0/)
 2. Click **Add Project**
-3. Select **Import a Google Cloud Project**
+3. Select **Import a Google Cloud Project** or **Add Firebase to Google Cloud project**
 4. Choose your Google Cloud project (the one you created in Part 1) and add Firebase resources
 
 **Why link Firebase?** Firebase provides additional tools and SDKs that work seamlessly with Google Cloud services like Firestore.
@@ -283,6 +283,12 @@ Verify the linking of the project to the firebase project:
 ```bash
 npx firebase projects:list
 ```
+Preparing the list of your Firebase projects
+┌──────────────────────┬────────────────────────┬────────────────┬──────────────────────┐
+│ Project Display Name │ Project ID             │ Project Number │ Resource Location ID │
+├──────────────────────┼────────────────────────┼────────────────┼──────────────────────┤
+│ firebase-images      │ firebase-images-479513 │ 473925997700   │ [Not specified]      │
+└──────────────────────┴────────────────────────┴────────────────┴──────────────────────┘
 
 You should see your Google Cloud project listed with a Firebase project ID.
 
@@ -540,9 +546,9 @@ Steps to locate the correct email:
    ```bash
    gcloud projects describe firebase-nosql --format="value(projectNumber)"
    ```
-2. Substitute the number you get (e.g., `427242312382`) into the service agent email:
+2. Substitute the number <PROJECT_NUMBER> with the number you get (e.g., `427242312382`) into the service agent email:
    ```
-   service-427242312382@gs-project-accounts.iam.gserviceaccount.com
+   service-<PROJECT_NUMBER>@gs-project-accounts.iam.gserviceaccount.com
    ```
 
 **Console alternative**:
@@ -558,7 +564,7 @@ Assign the Pub/Sub Publisher role so the service agent can deliver events to Eve
 
 ```bash
 gcloud projects add-iam-policy-binding firebase-nosql \
-    --member="serviceAccount:service-427242312382@gs-project-accounts.iam.gserviceaccount.com" \
+    --member="serviceAccount:service-<PROJECT_NUMBER>@gs-project-accounts.iam.gserviceaccount.com" \
     --role="roles/pubsub.publisher"
 ```
 
@@ -958,12 +964,12 @@ Look for:
 
 Check thumbnail was created:
 ```bash
-gsutil ls gs://thumbnail-bucket-dm01
+gsutil ls gs://thumbnail-bucket-your-unique-<unique-id>
 ```
 
 Check processed image:
 ```bash
-gsutil ls gs://processed-images-bucket-dm01
+gsutil ls gs://processed-images-bucket-your-unique-<unique-id>
 ```
 
 You should see:
@@ -1026,9 +1032,9 @@ gcloud functions delete processImage --gen2 --region=europe-west2
 
 ```bash
 # The -r flag recursively deletes all objects in the bucket
-gsutil rm -r gs://image-upload-bucket-dm01
-gsutil rm -r gs://thumbnail-bucket-dm01
-gsutil rm -r gs://processed-images-bucket-dm01
+gsutil rm -r gs://image-upload-bucket-your-unique-<unique-id>
+gsutil rm -r gs://thumbnail-bucket-your-unique-<unique-id>
+gsutil rm -r gs://processed-images-bucket-your-unique-<unique-id>
 ```
 
 **What this does:** Permanently deletes buckets and all files inside them.
