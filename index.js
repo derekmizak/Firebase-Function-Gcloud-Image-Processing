@@ -12,9 +12,9 @@ const db = admin.firestore();
 const storage = new Storage();
 
 // Bucket Names
-const SOURCE_BUCKET = 'image-upload-bucket-dm06';
-const THUMBNAIL_BUCKET = 'thumbnail-bucket-dm06';
-const PROCESSED_BUCKET = 'processed-images-bucket-dm06';
+const SOURCE_BUCKET = 'image-upload-bucket-dm07';
+const THUMBNAIL_BUCKET = 'thumbnail-bucket-dm07';
+const PROCESSED_BUCKET = 'processed-images-bucket-dm07';
 
 // Helper function to convert metadata to Firestore-compatible format
 const makeFirestoreCompatible = (data) => {

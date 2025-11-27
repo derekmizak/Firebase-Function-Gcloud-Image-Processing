@@ -81,7 +81,7 @@ Before starting, familiarize yourself with these core concepts:
 2. Note your **Project ID** (e.g., `your-project-id`).
 3. Set the project ID as the default for the `gcloud` CLI:
    ```bash
-   gcloud config set project firebase-nosql
+   gcloud config set project firebase-images-479513
    ```
 4. Enable billing for the project:
    - Navigate to the **Billing** section of your project.
@@ -126,18 +126,18 @@ Bucket names in Google Cloud Storage must be **globally unique** across all Goog
 **📖 Reference**: [Bucket Naming Guidelines](https://cloud.google.com/storage/docs/naming-buckets)
 
 Append a unique identifier to your bucket names. For example:
-- `image-upload-bucket-your-unique-dm03`
-- `thumbnail-bucket-your-unique-dm03`
-- `processed-images-bucket-your-unique-dm03`
+- `image-upload-bucket-your-unique-dm07`
+- `thumbnail-bucket-your-unique-dm07`
+- `processed-images-bucket-your-unique-dm07`
 
-Create the three buckets (replace `dm01` with your unique identifier):
+Create the three buckets (replace `dm07` with your unique identifier):
 
 ```bash
 # The -l flag specifies the location (europe-west2 = London)
 # Choose a region close to your users for better performance
-gsutil mb -l europe-west2 gs://image-upload-bucket-dm06
-gsutil mb -l europe-west2 gs://thumbnail-bucket-dm06
-gsutil mb -l europe-west2 gs://processed-images-bucket-dm06
+gsutil mb -l europe-west2 gs://image-upload-bucket-dm07
+gsutil mb -l europe-west2 gs://thumbnail-bucket-dm07
+gsutil mb -l europe-west2 gs://processed-images-bucket-dm07
 ```
 
 **Why three separate buckets?**
@@ -152,9 +152,9 @@ In the `index.js` file, update the following code with your bucket names:
 
 ```javascript
 // Bucket Names
-const SOURCE_BUCKET = 'image-upload-bucket-dm06';
-const THUMBNAIL_BUCKET = 'thumbnail-bucket-dm06';
-const PROCESSED_BUCKET = 'processed-images-bucket-dm06';
+const SOURCE_BUCKET = 'image-upload-bucket-dm07';
+const THUMBNAIL_BUCKET = 'thumbnail-bucket-dm07';
+const PROCESSED_BUCKET = 'processed-images-bucket-dm07';
 ```
 
 
@@ -163,7 +163,7 @@ Grant Permissions (if you have admin access):
 Use the following command to grant yourself the necessary permissions:
 
 ```bash
-gcloud projects add-iam-policy-binding firebase-nosql \
+gcloud projects add-iam-policy-binding firebase-images-479513 \
     --member="user:dbs.cd2025@gmail.com" \
     --role="roles/storage.admin"
 ```
@@ -183,9 +183,9 @@ gcloud storage buckets list
 
 Disable public access for all buckets:
 ```bash
-gsutil iam ch -d allUsers gs://image-upload-bucket-dm06
-gsutil iam ch -d allUsers gs://thumbnail-bucket-dm06
-gsutil iam ch -d allUsers gs://processed-images-bucket-dm06
+gsutil iam ch -d allUsers gs://image-upload-bucket-dm07
+gsutil iam ch -d allUsers gs://thumbnail-bucket-dm07
+gsutil iam ch -d allUsers gs://processed-images-bucket-dm07
 ```
 
 **What this command does:** The `-d` flag removes (`deletes`) the IAM binding for `allUsers`, ensuring only authenticated users with proper permissions can access these buckets.
