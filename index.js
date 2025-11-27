@@ -11,10 +11,11 @@ const db = admin.firestore();
 // Google Cloud Storage
 const storage = new Storage();
 
-// Bucket Names
-const SOURCE_BUCKET = 'image-upload-bucket-dm07';
-const THUMBNAIL_BUCKET = 'thumbnail-bucket-dm07';
-const PROCESSED_BUCKET = 'processed-images-bucket-dm07';
+// Bucket Names - UPDATE THESE WITH YOUR UNIQUE BUCKET NAMES
+// Replace <unique-id> with your identifier (e.g., jsmith01)
+const SOURCE_BUCKET = 'image-upload-bucket-<unique-id>';
+const THUMBNAIL_BUCKET = 'thumbnail-bucket-<unique-id>';
+const PROCESSED_BUCKET = 'processed-images-bucket-<unique-id>';
 
 // Helper function to convert metadata to Firestore-compatible format
 const makeFirestoreCompatible = (data) => {

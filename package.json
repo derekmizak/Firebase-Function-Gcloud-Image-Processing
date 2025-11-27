@@ -4,7 +4,7 @@
   "description": "Educational Cloud Function for image processing with metadata extraction",
   "main": "index.js",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.17.3",
